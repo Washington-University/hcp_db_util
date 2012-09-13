@@ -1,6 +1,7 @@
 #!/bin/sh
 
 host=intradb.humanconnectome.org
+project="HCP_Phase2"
 
 while getopts "f:p:r:s:u:" opt; do
     case $opt in
@@ -47,9 +48,6 @@ done
 
 
 url="https://${host}/data/services/dicomdump?src=/archive"
-
-project="HCP_Phase2"
-
 
 if [ "x$user" == "x" ]; then
     echo "Must specify HCP username (-u option)."
