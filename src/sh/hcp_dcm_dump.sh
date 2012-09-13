@@ -56,7 +56,7 @@ if [ "x$user" == "x" ]; then
     exit 2
 fi
 if [ "x$session" == "x" ]; then
-    echo "Must specific session ID (-s option)."
+    echo "Must specify session ID (-s option)."
     exit 2
 fi
 
