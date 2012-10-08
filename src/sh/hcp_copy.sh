@@ -5,22 +5,30 @@
 
 archive=/data/intradb/archive/HCP_Phase2/arc001
 
-while getopts "S:K:o:" opt; do
+while getopts "D:F:K:S:V" opt; do
     case $opt in
-	S)
-	    subject=$OPTARG
+	D)
+	    outdir=$OPTARG
+	    ;;
+
+	F)
+	    fMRIName=$OPTARG
 	    ;;
 
 	K)
 	    input_packet=$OPTARG
 	    ;;
 
-	o)
-	    outdir=$OPTARG
+	S)
+	    subject=$OPTARG
+	    ;;
+
+	V)
+	    verbose="-v"
 	    ;;
 
 	\?)
-	    echo 'Usage: arc_session -S subject -K Structural|Functional [-o output-directory]' >&2
+	    echo 'Usage: arc_session -S subject -K Structural|Functional [-F fMRI-packet-name] [-o output-directory]' >&2
 	    exit 1
 	    ;;
 
@@ -50,7 +58,7 @@ MNINonLinear/fsaverage_LR32k/*
 MNINonLinear/xfms/acpc_dc2standard.nii.gz
 MNINonLinear/xfms/NonlinearRegJacobians.nii.gz
 MNINonLinear/xfms/standard2acpc_dc.nii.gz
-T1w/Native/
+T1w/Native/*
 T1w/T1w_acpc_dc.nii.gz
 T1w/T1w_acpc_dc_restore.nii.gz
 T1w/T1w_acpc_dc_restore_brain.nii.gz
@@ -63,8 +71,7 @@ T1w/brainmask_fs.nii.gz
 T1w/wmparc.nii.gz
 T1w/BiasField_acpc_dc.nii.gz
 EOF
-	)
-	do
+	); do
 	    for session in strc xtra xtrb; do
 		declare basedir="${archive}/${subject}_${session}/RESOURCES/Details"
 		# if component ends in *, take all contained files
@@ -72,32 +79,70 @@ EOF
 		echo $h | grep '/\*$' >/dev/null
 		if [ $? -eq 0 ]; then
 		    declare name=$(echo $h | sed 's!/\*$!!')
-		    echo "listing $h as ${name}";
 		    declare dir="${basedir}/${name}"
 		    mkdir -p "${outdir}/${name}";
+		    let count=0
 		    for file in $(ls -p "$dir" | grep -v /); do
-			cp -v "${dir}/$file" "${outdir}/${name}/$file"
+			cp $verbose "${dir}/$file" "${outdir}/${name}/$file"
+			((count++))
 		    done
-		else
-		    declare path="${basedir}/${h}"
-		    if [ -d "$path" ]; then # is this ever valid anymore?
-			tar c -C "$basedir" "$h" | tar xv -C "$outdir"
-			break
-		    elif [ -f "$path" ]; then
-			mkdir -p $(dirname "${outdir}/${h}")
-			cp -v "$path" "${outdir}/${h}"
+		    if [ $count -gt 0 ]; then
 			break;
-		    else
-			echo $path not found
 		    fi
+		elif [ -f "${basedir}/${h}" ]; then
+		    mkdir -p $(dirname "${outdir}/${h}")
+		    cp $verbose "${basedir}/${h}" "${outdir}/${h}"
+		    break;
+		else
+		    echo $h not found in $session
 		fi
 	    done
 	done
 	;;
 
     functional)
-	echo 'Error: functional retrieval not yet implemented.'
-	exit 2;
+	if [ "x$fMRIName" == "x" ]; then
+	    echo 'Error: Must use -F to specify an fMRI packet' >&2
+	    exit 1
+	fi
+	for h in $(cat <<EOF
+MNINonLinear/Results/${fMRIName}/${fMRIName}.nii.gz
+MNINonLinear/Results/${fMRIName}/${fMRIName}_Atlas.dtseries.nii
+MNINonLinear/Results/${fMRIName}/Movement_Regressors.txt
+MNINonLinear/Results/${fMRIName}/Movement_Regressors_dt.txt
+MNINonLinear/Results/${fMRIName}/${fMRIName}_s2.atlasroi.L.32k_fs_LR.func.gii
+MNINonLinear/Results/${fMRIName}/${fMRIName}_s2.atlasroi.R.32k_fs_LR.func.gii
+MNINonLinear/Results/${fMRIName}/${fMRIName}_AtlasSubcortical_s2.nii.gz
+MNINonLinear/Results/${fMRIName}/${fMRIName}_SBRef.nii.gz
+MNINonLinear/Results/${fMRIName}/RibbonVolumeToSurfaceMapping/goodvoxels.nii.gz
+EOF
+	); do
+	    for session in fnca fncb xtra xtrb; do
+		declare basedir="${archive}/${subject}_${session}/RESOURCES/${fMRIName}"
+		# if component ends in *, take all contained files
+		# but don't descend into subdirectories
+		echo $h | grep '/\*$' >/dev/null
+		if [ $? -eq 0 ]; then
+		    declare name=$(echo $h | sed 's!/\*$!!')
+		    declare dir="${basedir}/${name}"
+		    mkdir -p "${outdir}/${name}";
+		    let count=0
+		    for file in $(ls -p "$dir" | grep -v /); do
+			cp $verbose "${dir}/$file" "${outdir}/${name}/$file"
+			((count++))
+		    done
+		    if [ $count -gt 0 ]; then
+			break;
+		    fi
+		elif [ -f "${basedir}/${h}" ]; then
+		    mkdir -p $(dirname "${outdir}/${h}")
+		    cp $verbose "${basedir}/${h}" "${outdir}/${h}"
+		    break;
+		else
+		    echo $(basename $h) not found in $basedir
+		fi
+	    done
+	done
 	;;
 
     *)
