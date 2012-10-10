@@ -69,6 +69,7 @@ T1w/T1wDividedByT2w.nii.gz
 T1w/T1wDividedByT2w_ribbon.nii.gz
 T1w/brainmask_fs.nii.gz
 T1w/wmparc.nii.gz
+T1w/ribbon.nii.gz
 T1w/BiasField_acpc_dc.nii.gz
 EOF
 	); do
