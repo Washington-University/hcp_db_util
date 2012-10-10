@@ -3,32 +3,32 @@
 # Copyright (c) 2012 Washington University
 # Author: Kevin A. Archie <karchie@wustl.edu>
 
-archive=/data/intradb/archive/HCP_Phase2/arc001
+declare -r archive=/data/intradb/archive/HCP_Phase2/arc001
 
 while getopts "D:F:K:S:V" opt; do
     case $opt in
 	D)
-	    outdir=$OPTARG
+	    declare -r outdir=$OPTARG
 	    ;;
 
 	F)
-	    fMRIName=$OPTARG
+	    declare -r fMRIName=$OPTARG
 	    ;;
 
 	K)
-	    input_packet=$OPTARG
+	    declare -r input_packet=$OPTARG
 	    ;;
 
 	S)
-	    subject=$OPTARG
+	    declare -r subject=$OPTARG
 	    ;;
 
 	V)
-	    verbose="-v"
+	    declare -r verbose="-v"
 	    ;;
 
 	\?)
-	    echo 'Usage: arc_session -S subject -K Structural|Functional [-F fMRI-packet-name] [-o output-directory]' >&2
+	    echo 'Usage: hcp_copy -S subject -K Structural|Functional [-F fMRI-packet-name] [-D output-directory]' >&2
 	    exit 1
 	    ;;
 
@@ -45,7 +45,7 @@ if [ "x$subject" == "x" ]; then
 fi
 
 # if output directory not specified, use subject label
-declare outdir=${outdir:-$subject}
+declare -r outdir=${outdir:-$subject}
 mkdir -p "$outdir"
 
 shopt -s nocasematch
@@ -73,15 +73,15 @@ T1w/BiasField_acpc_dc.nii.gz
 EOF
 	); do
 	    for session in strc xtra xtrb; do
-		declare basedir="${archive}/${subject}_${session}/RESOURCES/Details"
+		basedir="${archive}/${subject}_${session}/RESOURCES/Details"
 		# if component ends in *, take all contained files
 		# but don't descend into subdirectories
 		echo $h | grep '/\*$' >/dev/null
 		if [ $? -eq 0 ]; then
-		    declare name=$(echo $h | sed 's!/\*$!!')
-		    declare dir="${basedir}/${name}"
+		    name=$(echo $h | sed 's!/\*$!!')
+		    dir="${basedir}/${name}"
 		    mkdir -p "${outdir}/${name}";
-		    let count=0
+		    count=0
 		    for file in $(ls -p "$dir" | grep -v /); do
 			cp $verbose "${dir}/$file" "${outdir}/${name}/$file"
 			((count++))
@@ -94,7 +94,9 @@ EOF
 		    cp $verbose "${basedir}/${h}" "${outdir}/${h}"
 		    break;
 		else
-		    echo $h not found in $session
+		    if [ -n "$verbose" ]; then
+			echo $h not found in ${subject}_${session}
+		    fi
 		fi
 	    done
 	done
@@ -118,15 +120,15 @@ MNINonLinear/Results/${fMRIName}/RibbonVolumeToSurfaceMapping/goodvoxels.nii.gz
 EOF
 	); do
 	    for session in fnca fncb xtra xtrb; do
-		declare basedir="${archive}/${subject}_${session}/RESOURCES/${fMRIName}"
+		basedir="${archive}/${subject}_${session}/RESOURCES/${fMRIName}"
 		# if component ends in *, take all contained files
 		# but don't descend into subdirectories
 		echo $h | grep '/\*$' >/dev/null
 		if [ $? -eq 0 ]; then
-		    declare name=$(echo $h | sed 's!/\*$!!')
-		    declare dir="${basedir}/${name}"
+		    name=$(echo $h | sed 's!/\*$!!')
+		    dir="${basedir}/${name}"
 		    mkdir -p "${outdir}/${name}";
-		    let count=0
+		    declare -i count=0
 		    for file in $(ls -p "$dir" | grep -v /); do
 			cp $verbose "${dir}/$file" "${outdir}/${name}/$file"
 			((count++))
@@ -139,7 +141,9 @@ EOF
 		    cp $verbose "${basedir}/${h}" "${outdir}/${h}"
 		    break;
 		else
-		    echo $(basename $h) not found in $basedir
+		    if [ -n "$verbose" ]; then
+			echo $(basename $h) not found in ${subject}_${session}
+		    fi
 		fi
 	    done
 	done
