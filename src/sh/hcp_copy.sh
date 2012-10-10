@@ -8,7 +8,7 @@ declare -r archive=/data/intradb/archive/HCP_Phase2/arc001
 while getopts "D:F:K:S:V" opt; do
     case $opt in
 	D)
-	    declare -r outdir=$OPTARG
+	    outdir=$OPTARG
 	    ;;
 
 	F)
@@ -45,7 +45,8 @@ if [ "x$subject" == "x" ]; then
 fi
 
 # if output directory not specified, use subject label
-declare -r outdir=${outdir:-$subject}
+outdir=${outdir:-$subject}
+declare -r outdir
 mkdir -p "$outdir"
 
 shopt -s nocasematch
