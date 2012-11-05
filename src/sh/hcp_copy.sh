@@ -39,7 +39,7 @@ while getopts "D:F:K:S:V" opt; do
     esac
 done
 
-if [ "x$subject" == "x" ]; then
+if [ -z "$subject" ]; then
     echo 'Error: Must use -S to specify a subject' >&2
     exit 1
 fi
@@ -117,6 +117,7 @@ MNINonLinear/Results/${fMRIName}/Movement_Regressors_dt.txt
 MNINonLinear/Results/${fMRIName}/${fMRIName}_s2.atlasroi.L.32k_fs_LR.func.gii
 MNINonLinear/Results/${fMRIName}/${fMRIName}_s2.atlasroi.R.32k_fs_LR.func.gii
 MNINonLinear/Results/${fMRIName}/${fMRIName}_AtlasSubcortical_s2.nii.gz
+MNINonLinear/Results/${fMRIName}/${fMRIName}_Jacobian.nii.gz
 MNINonLinear/Results/${fMRIName}/${fMRIName}_SBRef.nii.gz
 MNINonLinear/Results/${fMRIName}/RibbonVolumeToSurfaceMapping/goodvoxels.nii.gz
 EOF
