@@ -39,6 +39,8 @@ while getopts "D:F:K:S:V" opt; do
     esac
 done
 
+declare -r CP="cp --preserve $verbose"
+
 if [ -z "$subject" ]; then
     echo 'Error: Must use -S to specify a subject' >&2
     exit 1
@@ -48,6 +50,34 @@ fi
 outdir=${outdir:-$subject}
 declare -r outdir
 mkdir -p "$outdir"
+
+copy_component() {
+    local basedir=$1
+    local component=$2
+
+    echo $component | grep '/\*$' >/dev/null
+    if [ $? -eq 0 ]; then
+	name=$(echo $component | sed 's!/\*$!!')
+	dir="${basedir}/${name}"
+	mkdir -p "${outdir}/${name}";
+	count=0
+	for file in $(ls -p "$dir" | grep -v /); do
+	    cp $verbose "${dir}/$file" "${outdir}/${name}/$file"
+	    ((count++))
+	done
+	if [ $count -gt 0 ]; then
+	    break;
+	fi
+    elif [ -f "${basedir}/${component}" ]; then
+	mkdir -p $(dirname "${outdir}/${component}")
+	$CP "${basedir}/${component}" "${outdir}/${component}"
+	break;
+    else
+	if [ -n "$verbose" ]; then
+	    echo $component not found in ${subject}_${session}
+	fi
+    fi
+}
 
 shopt -s nocasematch
 case $input_packet in
@@ -76,30 +106,7 @@ EOF
 	); do
 	    for session in strc xtra xtrb; do
 		basedir="${archive}/${subject}_${session}/RESOURCES/Details"
-		# if component ends in *, take all contained files
-		# but don't descend into subdirectories
-		echo $h | grep '/\*$' >/dev/null
-		if [ $? -eq 0 ]; then
-		    name=$(echo $h | sed 's!/\*$!!')
-		    dir="${basedir}/${name}"
-		    mkdir -p "${outdir}/${name}";
-		    count=0
-		    for file in $(ls -p "$dir" | grep -v /); do
-			cp $verbose "${dir}/$file" "${outdir}/${name}/$file"
-			((count++))
-		    done
-		    if [ $count -gt 0 ]; then
-			break;
-		    fi
-		elif [ -f "${basedir}/${h}" ]; then
-		    mkdir -p $(dirname "${outdir}/${h}")
-		    cp $verbose "${basedir}/${h}" "${outdir}/${h}"
-		    break;
-		else
-		    if [ -n "$verbose" ]; then
-			echo $h not found in ${subject}_${session}
-		    fi
-		fi
+		copy_component $basedir $h
 	    done
 	done
 	;;
@@ -124,35 +131,32 @@ EOF
 	); do
 	    for session in fnca fncb xtra xtrb; do
 		basedir="${archive}/${subject}_${session}/RESOURCES/${fMRIName}"
-		# if component ends in *, take all contained files
-		# but don't descend into subdirectories
-		echo $h | grep '/\*$' >/dev/null
-		if [ $? -eq 0 ]; then
-		    name=$(echo $h | sed 's!/\*$!!')
-		    dir="${basedir}/${name}"
-		    mkdir -p "${outdir}/${name}";
-		    declare -i count=0
-		    for file in $(ls -p "$dir" | grep -v /); do
-			cp $verbose "${dir}/$file" "${outdir}/${name}/$file"
-			((count++))
-		    done
-		    if [ $count -gt 0 ]; then
-			break;
-		    fi
-		elif [ -f "${basedir}/${h}" ]; then
-		    mkdir -p $(dirname "${outdir}/${h}")
-		    cp $verbose "${basedir}/${h}" "${outdir}/${h}"
-		    break;
-		else
-		    if [ -n "$verbose" ]; then
-			echo $(basename $h) not found in ${subject}_${session}
-		    fi
-		fi
+		copy_component $basedir $h
+	    done
+	done
+	;;
+
+    diffusion)
+	for h in $(cat <<EOF
+Diffusion/data/bvals
+Diffusion/data/bvecs
+Diffusion/data/data.nii.gz
+Diffusion/data/nodif_brain_mask.nii.gz
+Diffusion/data/grad_dev.nii.gz
+T1w/xfms/diff2str.mat
+T1w/xfms/str2diff.mat
+MNINonLinear/xfms/diff2standard.nii.gz
+MNINonLinear/xfms/standard2diff.nii.gz
+EOF
+	); do
+	    for session in diff xtra xtrb; do
+		basedir="${archive}/${subject}_${session}/RESOURCES/Diffusion"
+		copy_component $basedir $h
 	    done
 	done
 	;;
 
     *)
-	echo 'Error: -K argument must be Structural or Functional.'
+	echo 'Error: -K argument must be Structural, Functional, or Diffusion.'
 	exit 1;
 esac
