@@ -66,16 +66,19 @@ copy_component() {
 	    ((count++))
 	done
 	if [ $count -gt 0 ]; then
-	    break;
+	    return 0
+	else
+	    return 1
 	fi
     elif [ -f "${basedir}/${component}" ]; then
 	mkdir -p $(dirname "${outdir}/${component}")
 	$CP "${basedir}/${component}" "${outdir}/${component}"
-	break;
+	return 0
     else
 	if [ -n "$verbose" ]; then
 	    echo $component not found in ${subject}_${session}
 	fi
+	return 1
     fi
 }
 
@@ -132,6 +135,9 @@ EOF
 	    for session in fnca fncb xtra xtrb; do
 		basedir="${archive}/${subject}_${session}/RESOURCES/${fMRIName}"
 		copy_component $basedir $h
+		if [ $? -eq 0 ]; then
+		    break;
+		fi
 	    done
 	done
 	;;
@@ -152,6 +158,9 @@ EOF
 	    for session in diff xtra xtrb; do
 		basedir="${archive}/${subject}_${session}/RESOURCES/Diffusion"
 		copy_component $basedir $h
+		if [ $? -eq 0 ]; then
+		    break;
+		fi
 	    done
 	done
 	;;
