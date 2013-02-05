@@ -135,9 +135,6 @@ EOF
 	    for session in fnca fncb xtra xtrb; do
 		basedir="${archive}/${subject}_${session}/RESOURCES/${fMRIName}"
 		copy_component $basedir $h
-		if [ $? -eq 0 ]; then
-		    break;
-		fi
 	    done
 	done
 	;;
@@ -158,9 +155,6 @@ EOF
 	    for session in diff xtra xtrb; do
 		basedir="${archive}/${subject}_${session}/RESOURCES/Diffusion"
 		copy_component $basedir $h
-		if [ $? -eq 0 ]; then
-		    break;
-		fi
 	    done
 	done
 	;;
