@@ -7,7 +7,7 @@ if [ 0 -eq $# ]; then
     cat <<EOF
 hcp_resource_copy : Copy resource contents from HCP intradb archive
                    to local disk
-  commit$Id: dc4575bc7949abeb1ba0e9ee2cf7da25c2613388 $
+  git ident $Id: dc4575bc7949abeb1ba0e9ee2cf7da25c2613388 $
 
 Usage:
 hcp_resource_copy [OPTIONS]
