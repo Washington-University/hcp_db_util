@@ -1,28 +1,28 @@
 #!/bin/sh
-# copy-db-resource.sh
+# hcp_resource_copy.sh
 # Copyright (c) 2013 Washington University School of Medicine
 # Author: Kevin A. Archie <karchie@wustl.edu>
 
 if [ 0 -eq $# ]; then
     cat <<EOF
-copy-db-resource : Copy resource contents from HCP intradb archive
+hcp_resource_copy : Copy resource contents from HCP intradb archive
                    to local disk
-  commit$Id$
+  commit$Id: dc4575bc7949abeb1ba0e9ee2cf7da25c2613388 $
 
 Usage:
-copy-db-resource [OPTIONS]
-    -o output-dir    Sets directory into which files will be copied
-    -u username      XNAT username (optional; defaults to UNIX username)
-    -p password      XNAT password
-    -P project       Project label (optional; defaults to HCP_Phase2)
-    -S subject       Subject label (optional)
-    -X experiment    Experiment label (optional)
-    -R resource      Resource label; if omitted, prints list of
-                     available resources
+hcp_resource_copy [OPTIONS]
+  -o output-dir    Sets directory into which files will be copied
+  -u username      XNAT username (optional; defaults to UNIX username)
+  -p password      XNAT password
+  -P project       Project label (optional; defaults to HCP_Phase2)
+  -S subject       Subject label (optional)
+  -X experiment    Experiment label (optional)
+  -R resource      Resource label; if omitted, prints list of
+                   available resources
 
 Example:
 
-copy-db-resource -o ~/data -p zzyxy -S 792564 -R T2w
+hcp_resource_copy -o ~/data -p zzyxy -S 792564 -R T2w
 
 EOF
     exit 1
