@@ -6,7 +6,7 @@
 if [ 0 -eq $# ]; then
     cat <<EOF
 hcp_resource_copy : Copy resource contents from HCP intradb archive
-                   to local disk
+                    to local disk
   git ident $Id$
 
 Usage:
@@ -17,6 +17,7 @@ hcp_resource_copy [OPTIONS]
   -P project       Project label (optional; defaults to HCP_Phase2)
   -S subject       Subject label (optional)
   -X experiment    Experiment label (optional)
+  -N scan          Scan ID (optional)
   -R resource      Resource label; if omitted, prints list of
                    available resources
 
@@ -36,7 +37,7 @@ user=$USER
 project=HCP_Phase2
 outdir=$(pwd)
 
-while getopts "o:p:u:v:P:R:S:X:" opt; do
+while getopts "o:p:u:v:N:P:R:S:X:" opt; do
     case $opt in
 	o)
 	    outdir=$OPTARG
@@ -48,6 +49,10 @@ while getopts "o:p:u:v:P:R:S:X:" opt; do
 
 	u)
 	    user=$OPTARG
+	    ;;
+
+	N)
+	    scan=$OPTARG
 	    ;;
 
 	P)
@@ -70,7 +75,7 @@ done
 
 if [ -z "$password" ]; then
     # TODO: get password from .xnatpass?
-    echo 'Error: must set password with -p'
+    echo Error: must set password with -p
     exit 1
 fi
 
@@ -82,15 +87,22 @@ if [ -n "$experiment" ]; then
     url=${url}/experiments/${experiment}
 fi
 
+if [ -n "$scan" ]; then
+    url=${url}/scans/${scan}
+    tag=file
+else
+    tag=resource
+fi
+
 if [ -n "$resource" ]; then
     server_path=$(curl -sf -u $user:$password ${url}?format=xml |
-	grep "^<xnat:resource label=\"$resource\" " |
+	grep "^<xnat:$tag label=\"$resource\" " |
 	tr ' ' '\n' |
 	grep '^URI=' |
 	cut -f 2 -d '"' |
 	xargs dirname)
     if [ $? -ne 0 ]; then
-	echo 'unable to retrieve session document'
+	echo unable to retrieve metadata from $XNAT
 	exit -1
     fi
     
@@ -100,7 +112,7 @@ if [ -n "$resource" ]; then
     cp -r $local_path $outdir
 else
     curl -sf -u $user:$password ${url}?format=xml | \
-	grep "^<xnat:resource " | \
+	grep "^<xnat:$tag " | \
 	tr ' ' '\n' | \
 	grep '^label=' | \
 	cut -f 2 -d '"'
