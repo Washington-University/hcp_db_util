@@ -23,7 +23,7 @@ hcp_resource_copy [OPTIONS]
 
 Example:
 
-hcp_resource_copy -o ~/data -p zzyxy -S 792564 -R T2w
+hcp_resource_copy -o ~/data -p zzyxy -S 792564 -X 792564_strc -N 1 -R NIFTI
 
 EOF
     exit 1
